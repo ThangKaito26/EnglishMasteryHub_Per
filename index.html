@@ -414,7 +414,7 @@
             <div class="input-group">
                 <input type="text" class="main-input" id="vocabularyInput" placeholder="Nhập từ, câu, chủ đề để học...">
                 <button class="icon-btn" id="btnPasteClipboard" title="Dán từ clipboard">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1-1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
                 </button>
                 <button class="icon-btn" id="btnClearInput" title="Xóa nội dung">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
@@ -503,6 +503,7 @@
     <div id="content-results-area" class="main-container">
     </div>
 
+    <!-- Modal for Grammar Correction -->
     <div id="correctionModal" class="modal">
         <div class="modal-content">
             <span id="closeCorrectionModal" class="close-button">&times;</span>
@@ -512,7 +513,7 @@
         </div>
     </div>
 
-    <!-- New Manual Speaking Input Modal -->
+    <!-- Modal for Manual Speaking Practice Input -->
     <div id="manualSpeakingModal" class="modal">
         <div class="modal-content">
             <span id="closeManualSpeakingModal" class="close-button">&times;</span>
@@ -527,6 +528,21 @@
             </div>
             <div class="flex justify-end gap-3">
                 <button id="startManualPracticeBtn" class="primary-btn">Bắt đầu Luyện tập</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Modal for Professional Email Prompt -->
+    <div id="emailPromptModal" class="modal">
+        <div class="modal-content">
+            <span id="closeEmailPromptModal" class="close-button">&times;</span>
+            <h2 class="text-xl font-bold mb-4 text-indigo-600">Soạn thảo Email chuyên nghiệp</h2>
+            <div class="info-card mb-4">
+                <p class="mb-2 font-semibold">Nhập đề bài, chủ đề hoặc yêu cầu viết thư của bạn vào đây:</p>
+                <textarea id="emailPromptInput" class="textarea-input" rows="10" placeholder="Ví dụ: Dán đề bài thi viết thư VSTEP của bạn vào đây..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button id="startEmailGenerationBtn" class="primary-btn">Tạo Email</button>
             </div>
         </div>
     </div>
@@ -707,7 +723,7 @@
                      responseSchema: schema
                  };
              }
-             const apiKey = "AIzaSyCzDH2cnGU8JOqy3-HDEZPSvwsff7hkDdY"; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+             const apiKey = "AIzaSyByNgUKCZKSKYMLUV7AhkxRKcWG2mBxAyI"; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
              
              const response = await fetch(apiUrl, {
@@ -740,18 +756,10 @@
              throw new Error('Cấu trúc phản hồi API không mong đợi hoặc trống.');
         }
 
-        async function handleFeature(featureKey, headerText, promptGenerator, renderer, inputValidator = (input) => !!input) {
+        async function handleFeature(featureKey, headerText, promptGenerator, renderer, inputValidator = (input) => !!input, featureInputValue) {
             const { container, content, overlay } = createContentSection(featureKey, `Đang ${headerText.toLowerCase()}`);
 
-            let featureInput;
-            // For manual speaking practice, the input is handled via the modal
-            if (featureKey === 'speakingPracticeManual') {
-                // The actual input (sentences array) will be passed directly from startSpeakingPracticeManual
-                featureInput = arguments[arguments.length - 1]; // This is a hacky way to get the last argument, which will be 'sentences'
-                                                                 // A cleaner way would be to refactor handleFeature to accept a specific data param
-            } else {
-                featureInput = vocabularyInput.value.trim();
-            }
+            let featureInput = featureInputValue !== undefined ? featureInputValue : vocabularyInput.value.trim();
 
             if (!inputValidator(featureInput)) {
                 showMessage(`Vui lòng nhập đầu vào hợp lệ cho chức năng này.`, 'error');
@@ -761,7 +769,6 @@
 
             try {
                 if (['conversationSimulator', 'speakingPractice', 'speakingPracticeManual', 'writingPractice'].includes(featureKey)) {
-                     // For these specific features, the renderer expects a direct input (like topic or sentences array)
                      await renderer(featureInput, content, headerText);
                 } else {
                     const { prompt, schema } = promptGenerator(featureInput);
@@ -1190,12 +1197,17 @@
                     </div>
                 `;
             },
-            emailDrafter: (data, el, headerText) => {
-                el.innerHTML = `<h2 class="section-header">📧 ${headerText}: ${data.purpose}</h2>` +
-                data.drafts.map(draft => `
+            // NEW RENDERER FOR VSTEP EMAILS
+            vstepEmails: (data, el, headerText) => {
+                el.innerHTML = `<h2 class="section-header">📧 ${headerText}</h2>` +
+                data.emails.map(email => `
                     <div class="info-card">
-                        <h3 class="card-title"><span class="font-medium px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">${draft.tone}</span></h3>
-                        <pre class="whitespace-pre-wrap font-sans leading-relaxed">${draft.body}</pre>
+                        <h3 class="card-title">
+                            <span class="font-medium px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
+                                Cấp độ ${email.level}
+                            </span>
+                        </h3>
+                        <pre class="whitespace-pre-wrap font-sans leading-relaxed p-2 bg-white dark:bg-slate-800 rounded-lg">${email.body}</pre>
                     </div>
                 `).join('');
             },
@@ -1480,7 +1492,7 @@
                 } else {
                      resultHTML = `
                          <div class="info-card border-red-500 bg-red-50 dark:bg-red-900/50 dark:border-red-700">
-                            <h3 class="card-title text-red-700 dark:text-red-300">� Cần xem lại!</h3>
+                            <h3 class="card-title text-red-700 dark:text-red-300">⚠️ Cần xem lại!</h3>
                             <p><strong>Câu của bạn:</strong> <span class="line-through">${result.original_sentence}</span></p>
                             <p class="mt-2"><strong>Câu đã sửa:</strong> <span class="font-semibold text-green-600 dark:text-green-400">${result.corrected_sentence}</span></p>
                             <h4 class="card-title-alt mt-4">Các thay đổi:</h4>
@@ -1512,7 +1524,7 @@
             }),
             examples: (input) => ({ prompt: `Tạo 10-15 câu ví dụ tiếng Anh và bản dịch tiếng Việt cho từ hoặc cụm từ "${input}" với các cấu trúc câu đa dạng. Trả về dưới dạng mảng JSON với các thuộc tính: "STT", "Cấu trúc câu", "Ví dụ (tiếng Anh)", "Ví dụ (Tiếng Việt)".`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { "STT": { "type": "NUMBER" }, "Cấu trúc câu": { "type": "STRING" }, "Ví dụ (tiếng Anh)": { "type": "STRING" }, "Ví dụ (Tiếng Việt)": { "type": "STRING" } }, required: ["STT", "Cấu trúc câu", "Ví dụ (tiếng Anh)", "Ví dụ (Tiếng Việt)"] } } }),
             exercise: (input) => ({ prompt: `Tạo 10 câu bài tập điền vào chỗ trống cho từ/chủ đề tiếng Anh "${input}". Mỗi câu, cung cấp câu với "____", từ đúng, 4 lựa chọn ngẫu nhiên (bao gồm đáp án đúng), và bản dịch tiếng Việt. Trả về mảng JSON với các thuộc tính: "id", "sentence_with_blank", "correct_word", "options", "translation".`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "NUMBER" }, sentence_with_blank: { type: "STRING" }, correct_word: { type: "STRING" }, options: { type: "ARRAY", items: { type: "STRING" } }, translation: { type: "STRING" } }, required: ["id", "sentence_with_blank", "correct_word", "options", "translation"] } } }),
-            listeningFillInTheBlank: (input) => ({ prompt: `Tạo 5 câu bài tập nghe và điền vào chỗ trống cho từ/chủ đề tiếng Anh "${input}". Mỗi câu phải có: câu tiếng Anh đầy đủ để phát âm, câu đó với một từ được thay bằng "____", từ đúng, 4 lựa chọn ngẫu nhiên (bao gồm đáp án đúng), và bản dịch tiếng Việt của câu đầy đủ. Trả về mảng JSON với các thuộc tính: "id", "audio_sentence", "sentence_with_blank", "correct_word", "options", "translation".`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "NUMBER" }, audio_sentence: { type: "STRING" }, sentence_with_blank: { type: "STRING" }, correct_word: { type: "STRING" }, options: { type: "ARRAY", items: { type: "STRING" } }, translation: { type: "STRING" } }, required: ["id", "audio_sentence", "sentence_with_blank", "correct_word", "options", "translation"] } } }),
+            listeningFillInTheBlank: (input) => ({ prompt: `Tạo 10 câu bài tập nghe và điền vào chỗ trống cho từ/chủ đề tiếng Anh "${input}". Mỗi câu phải có: câu tiếng Anh đầy đủ để phát âm, câu đó với một từ được thay bằng "____", từ đúng, 4 lựa chọn ngẫu nhiên (bao gồm đáp án đúng), và bản dịch tiếng Việt của câu đầy đủ. Trả về mảng JSON với các thuộc tính: "id", "audio_sentence", "sentence_with_blank", "correct_word", "options", "translation".`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "NUMBER" }, audio_sentence: { type: "STRING" }, sentence_with_blank: { type: "STRING" }, correct_word: { type: "STRING" }, options: { type: "ARRAY", items: { type: "STRING" } }, translation: { type: "STRING" } }, required: ["id", "audio_sentence", "sentence_with_blank", "correct_word", "options", "translation"] } } }),
             explanation: (input) => ({ prompt: `Cung cấp giải thích từ vựng chuyên sâu cho từ tiếng Anh "${input}". Trả về một đối tượng JSON với các thuộc tính sau: 'word' (từ gốc), 'meanings_table' (một mảng các đối tượng, mỗi đối tượng có 'meaning' - định nghĩa ngắn gọn bằng tiếng Việt, 'frequency' - mức độ phổ biến từ 1 đến 5, và 'example_collocation' - một cụm từ ví dụ), 'main_definition' (định nghĩa chính, chi tiết bằng tiếng Việt), 'synonyms' (mảng các đối tượng có 'term' - từ đồng nghĩa tiếng Anh, 'translation' - bản dịch tiếng Việt, 'popularity' - mức độ phổ biến từ 1-5), 'antonyms' (tương tự synonyms), 'collocations' (tương tự synonyms), 'usage_notes' (lưu ý sử dụng bằng tiếng Việt).`, schema: { type: "OBJECT", properties: { word: { "type": "STRING" }, meanings_table: { type: "ARRAY", items: { type: "OBJECT", properties: { meaning: { "type": "STRING" }, frequency: { "type": "NUMBER" }, example_collocation: { "type": "STRING" } }, required: ["meaning", "frequency", "example_collocation"] } }, main_definition: { "type": "STRING" }, synonyms: { type: "ARRAY", items: { type: "OBJECT", properties: { term: { "type": "STRING" }, translation: { "type": "STRING" }, popularity: { "type": "NUMBER" } }, required: ["term", "translation", "popularity"] } }, antonyms: { type: "ARRAY", items: { type: "OBJECT", properties: { term: { "type": "STRING" }, translation: { "type": "STRING" }, popularity: { "type": "NUMBER" } }, required: ["term", "translation", "popularity"] } }, collocations: { type: "ARRAY", items: { type: "OBJECT", properties: { term: { "type": "STRING" }, translation: { "type": "STRING" }, popularity: { "type": "NUMBER" } }, required: ["term", "translation", "popularity"] } }, usage_notes: { "type": "STRING" } }, required: ["word", "meanings_table", "main_definition", "synonyms", "antonyms", "collocations", "usage_notes"] } }),
             correction: (input) => ({ prompt: `Sửa lỗi câu tiếng Anh sau: "${input}". Cung cấp câu gốc, phiên bản đã sửa, danh sách các thay đổi (giải thích ngắn gọn từng lỗi BẰNG TIẾNG VIỆT), và bản dịch tiếng Việt của câu đã sửa. Trả về đối tượng JSON với các khóa: "original_sentence", "corrected_sentence", "changes" (mảng các chuỗi TIẾNG VIỆT), "translation".`, schema: { type: "OBJECT", properties: { original_sentence: { type: "STRING" }, corrected_sentence: { type: "STRING" }, changes: { type: "ARRAY", items: { type: "STRING" } }, translation: { type: "STRING" } }, required: ["original_sentence", "corrected_sentence", "changes", "translation"] } }),
             dialogue: (input) => ({ prompt: `Tạo một đoạn hội thoại tiếng Anh tự nhiên (khoảng 15-20 dòng) về chủ đề "${input}" với ít nhất hai nhân vật. Cung cấp tên nhân vật, lời thoại tiếng Anh và bản dịch tiếng Việt cho mỗi dòng. Trả về mảng JSON các đối tượng có khóa: "character", "english_line", "vietnamese_line".`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { character: { type: "STRING" }, english_line: { type: "STRING" }, vietnamese_line: { type: "STRING" } }, required: ["character", "english_line", "vietnamese_line"] } } }),
@@ -1528,7 +1540,11 @@
             comparison: (input) => ({ prompt: `So sánh các từ/cụm từ tiếng Anh sau: "${input}". Đối với mỗi từ, giải thích sắc thái ý nghĩa và cách dùng bằng tiếng Việt, kèm theo một câu ví dụ minh họa và bản dịch tiếng Việt của câu ví dụ đó. Trả về một mảng JSON, mỗi đối tượng có các khóa: "word", "explanation", "example_sentence", "example_translation".`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { word: { type: "STRING" }, explanation: { type: "STRING" }, example_sentence: { type: "STRING" }, example_translation: { type: "STRING" } }, required: ["word", "explanation", "example_sentence", "example_translation"] } } }),
             tone: (input) => ({ prompt: `Phân tích giọng điệu (ví dụ: Thân mật, Trang trọng, Giận dữ, Trung lập, Lịch sự) của câu tiếng Anh sau: "${input}". Cung cấp giải thích bằng tiếng Việt. Nếu có thể, đề xuất cách viết lại câu với 1-2 giọng điệu khác. Trả về đối tượng JSON với các khóa: "original_sentence", "tone", "explanation", "suggestions" (mảng các đối tượng, mỗi đối tượng có "new_tone" và "rewritten_sentence").`, schema: { type: "OBJECT", properties: { original_sentence: { type: "STRING" }, tone: { type: "STRING" }, explanation: { type: "STRING" }, suggestions: { type: "ARRAY", items: { type: "OBJECT", properties: { new_tone: { type: "STRING" }, rewritten_sentence: { type: "STRING" } } } } }, required: ["original_sentence", "tone", "explanation"] } }),
             idiom: (input) => ({ prompt: `Giải thích thành ngữ tiếng Anh '${input}'. Cung cấp bản dịch đen (nếu có, bằng tiếng Việt), ý nghĩa thực sự (bằng tiếng Việt), nguồn gốc hoặc câu chuyện đằng sau nó (bằng tiếng Việt), và 3 câu ví dụ (tiếng Anh kèm bản dịch tiếng Việt). Trả về JSON với các khóa: 'idiom', 'literal_translation', 'meaning', 'origin', 'examples' (mảng đối tượng có 'english' và 'vietnamese').`, schema: { type: "OBJECT", properties: { idiom: { type: "STRING" }, literal_translation: { type: "STRING" }, meaning: { type: "STRING" }, origin: { type: "STRING" }, examples: { type: "ARRAY", items: { type: "OBJECT", properties: { english: { type: "STRING" }, vietnamese: { type: "STRING" } }, required: ["english", "vietnamese"] } } }, required: ["idiom", "meaning", "origin", "examples"] } }),
-            emailDrafter: (input) => ({ prompt: `Soạn 3 email cho mục đích: "${input}". Cung cấp phiên bản trang trọng (formal), bán trang trọng (semi-formal), và thân mật (informal). Trả về đối tượng JSON với các khóa 'purpose' và 'drafts' (mảng đối tượng, mỗi đối tượng có 'tone' và 'body').`, schema: { type: "OBJECT", properties: { purpose: { type: "STRING" }, drafts: { type: "ARRAY", items: { type: "OBJECT", properties: { tone: { type: "STRING" }, body: { type: "STRING" } }, required: ["tone", "body"] } } }, required: ["purpose", "drafts"] } }),
+            // NEW PROMPT FOR VSTEP EMAILS
+            vstepEmails: (input) => ({ 
+                prompt: `Bạn là một chuyên gia luyện thi VSTEP. Dựa vào yêu cầu viết thư sau đây: "${input}", hãy viết 3 email trả lời hoàn chỉnh. Các email phải tuân thủ quy tắc và cấu trúc của bài thi viết VSTEP (khoảng 120 từ hoặc hơn để có điểm cao hơn 1 chút, có mở bài, thân bài, kết bài, trả lời đủ các câu hỏi trong đề). Ba email phải ở 3 cấp độ khác nhau: B1, B2, C1. Quan trọng nhất: nội dung, ý tưởng, và cách phát triển ý của mỗi email phải khác nhau, không chỉ đơn thuần thay đổi từ vựng. Hãy thể hiện 3 cách tiếp cận vấn đề khác nhau. Trả về một đối tượng JSON với khóa 'emails' là một mảng các đối tượng, mỗi đối tượng có khóa 'level' (string: 'B1', 'B2', hoặc 'C1') và 'body' (string: toàn bộ nội dung email).`, 
+                schema: { type: "OBJECT", properties: { emails: { type: "ARRAY", items: { type: "OBJECT", properties: { level: { type: "STRING" }, body: { type: "STRING" } }, required: ["level", "body"] } } }, required: ["emails"] } 
+            }),
             translateVnToEn: (input) => ({ prompt: `Dịch câu tiếng Việt sau đây sang tiếng Anh: "${input}". Cung cấp 5-7 phương án dịch khác nhau, sắp xếp theo mức độ phổ biến từ cao đến thấp. Với mỗi phương án, hãy cung cấp: 1. Bản dịch tiếng Anh. 2. Trạng thái phổ biến BẰNG TIẾNG VIỆT (ví dụ: "Rất phổ biến", "Tự nhiên", "Hơi trang trọng", "Ít dùng"). 3. Một ghi chú ngắn về ngữ cảnh sử dụng BẰNG TIẾNG VIỆT. Trả về một mảng JSON các đối tượng có khóa: "english_translation", "popularity_status" (bằng tiếng Việt), "usage_note" (bằng tiếng Việt).`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { english_translation: { type: "STRING" }, popularity_status: { type: "STRING" }, usage_note: { type: "STRING" } }, required: ["english_translation", "popularity_status", "usage_note"] } } }),
             conversationCorrection: (originalSentence) => ({ prompt: `Phân tích câu tiếng Anh sau: "${originalSentence}". Nếu có lỗi ngữ pháp/cú pháp/chính tả, hãy sửa lại và giải thích chi tiết lỗi bằng tiếng Việt, cung cấp câu đã sửa, ghi chú chỉnh sửa, và dịch nghĩa. Nếu câu đúng, hãy xác nhận là đúng và dịch nghĩa. Trả về một đối tượng JSON với các khóa "originalSentence", "correctedSentence", "isCorrect", "correctionNotes", "alternativePhrases", và "vietnameseTranslation".`, schema: { type: "OBJECT", properties: { originalSentence: { type: "STRING" }, correctedSentence: { type: "STRING" }, isCorrect: { type: "BOOLEAN" }, correctionNotes: { type: "STRING" }, alternativePhrases: { type: "ARRAY", items: { type: "STRING" } }, vietnameseTranslation: { type: "STRING" } }, required: ["originalSentence", "correctedSentence", "isCorrect", "correctionNotes", "alternativePhrases", "vietnameseTranslation"] } }),
             getUnusedWords: (scenario) => ({ prompt: `Dựa trên kịch bản hội thoại "${scenario}", hãy gợi ý một danh sách khoảng 5-10 từ vựng tiếng Anh liên quan. Trả về một mảng JSON các chuỗi từ vựng.`, schema: { type: "ARRAY", items: { type: "STRING" } } }),
@@ -1551,15 +1567,13 @@
         function generateListeningAndQuestions() { handleFeature('listening', 'Bài Nghe & Câu Hỏi', prompts.listening, renderers.listening); }
         function startSpeakingPractice() { handleFeature('speakingPractice', 'Luyện phản xạ nói', null, renderers.speakingPractice); }
         
-        // Modified to show a modal for input
         function startSpeakingPracticeManual() {
             const manualSpeakingModal = document.getElementById('manualSpeakingModal');
-            manualSpeakingModal.style.display = 'flex'; // Show the modal
+            manualSpeakingModal.style.display = 'flex'; 
 
-            // Event listener for the "Bắt đầu Luyện tập" button inside the modal
             document.getElementById('startManualPracticeBtn').onclick = () => {
                 const sentencesText = document.getElementById('manualSentencesInput').value.trim();
-                const randomOrder = document.getElementById('randomOrderCheckbox').checked; // Lấy trạng thái của checkbox
+                const randomOrder = document.getElementById('randomOrderCheckbox').checked;
 
                 if (!sentencesText) {
                     showMessage('Vui lòng nhập ít nhất một câu để luyện tập.', 'error');
@@ -1572,22 +1586,20 @@
                 }
 
                 if (randomOrder) {
-                    // Xáo trộn mảng nếu checkbox được chọn
                     for (let i = sentences.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [sentences[i], sentences[j]] = [sentences[j], sentences[i]];
                     }
                 }
 
-                manualSpeakingModal.style.display = 'none'; // Hide the modal
-                // Corrected call: Pass the 'sentences' array directly as the input to the renderer via handleFeature
+                manualSpeakingModal.style.display = 'none';
                 handleFeature('speakingPracticeManual', 'Luyện phản xạ thủ công', null, 
-                    (input, content, headerText) => renderers.speakingPracticeManual(sentences, content, headerText), // Pass 'sentences' here
-                    (input) => input.length > 0 // Validator still checks array length
+                    (input, content, headerText) => renderers.speakingPracticeManual(sentences, content, headerText),
+                    (input) => true, // Validator
+                    sentences // Pass sentences as featureInputValue
                 );
             };
 
-            // Event listeners to close the modal
             document.getElementById('closeManualSpeakingModal').onclick = () => {
                 manualSpeakingModal.style.display = 'none';
             };
@@ -1598,13 +1610,44 @@
             };
         }
 
+        // NEW: Function to show the email prompt modal
+        function showEmailPromptModal() {
+            const emailModal = document.getElementById('emailPromptModal');
+            emailModal.style.display = 'flex';
+
+            document.getElementById('startEmailGenerationBtn').onclick = () => {
+                const emailPrompt = document.getElementById('emailPromptInput').value.trim();
+                if (!emailPrompt) {
+                    showMessage('Vui lòng nhập đề bài hoặc chủ đề email.', 'error');
+                    return;
+                }
+                emailModal.style.display = 'none';
+                handleFeature(
+                    'vstepEmails', 
+                    'Soạn thảo Email theo cấp độ', 
+                    prompts.vstepEmails, 
+                    renderers.vstepEmails,
+                    (input) => !!input, // Validator
+                    emailPrompt // Pass the prompt from the modal as featureInputValue
+                );
+            };
+
+            document.getElementById('closeEmailPromptModal').onclick = () => {
+                emailModal.style.display = 'none';
+            };
+            emailModal.onclick = (event) => {
+                if (event.target == emailModal) {
+                    emailModal.style.display = 'none';
+                }
+            };
+        }
+
         function startWritingPractice() { handleFeature('writingPractice', 'Luyện viết (AI)', null, renderers.writingPractice); }
         function compareVocabulary() { handleFeature('comparison', 'So Sánh Từ Vựng', prompts.comparison, renderers.comparison, (input) => input.split(',').length > 1); }
         function analyzeTone() { handleFeature('tone', 'Phân Tích Giọng Điệu', prompts.tone, renderers.tone); }
         function explainIdiom() { handleFeature('idiom', 'Giải thích Thành ngữ', prompts.idiom, renderers.idiom); }
         function startConversationSimulator() { handleFeature('conversationSimulator', 'Mô phỏng Hội thoại', null, renderers.conversationSimulator); }
-        function draftEmail() { handleFeature('emailDrafter', 'Soạn thảo Email', prompts.emailDrafter, renderers.emailDrafter); }
-
+        
         async function generateImage() {
             const promptText = vocabularyInput.value.trim();
             if (!promptText) {
@@ -2026,7 +2069,7 @@
                     <tr> <td>✅ Câu đã sửa</td> <td>${data.correctedSentence}</td> </tr>
                     <tr> <td>🛠️ Ghi chú</td> <td>${data.correctionNotes}</td> </tr>
                     <tr> <td>💬 Cách nói khác</td> <td>${data.alternativePhrases.join(' / ')}</td> </tr>
-                    <tr> <td>🇳 Dịch nghĩa</td> <td>${data.vietnameseTranslation}</td> </tr>
+                    <tr> <td>🇻🇳 Dịch nghĩa</td> <td>${data.vietnameseTranslation}</td> </tr>
                 </table>
                 </div>
             `;
@@ -2101,7 +2144,8 @@
             document.getElementById('btnCheckPopularity').addEventListener('click', checkPopularity);
             document.getElementById('btnTranslateSentence').addEventListener('click', translateSentence);
             document.getElementById('btnStartConversationSimulator').addEventListener('click', startConversationSimulator);
-            document.getElementById('btnDraftEmail').addEventListener('click', draftEmail);
+            // UPDATED: This button now opens the new modal
+            document.getElementById('btnDraftEmail').addEventListener('click', showEmailPromptModal);
             document.getElementById('btnGenerateImage').addEventListener('click', generateImage);
             document.getElementById('btnStartSpeakingPractice').addEventListener('click', startSpeakingPractice);
             document.getElementById('btnStartSpeakingPracticeManual').addEventListener('click', startSpeakingPracticeManual);
