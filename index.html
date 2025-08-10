@@ -480,10 +480,16 @@
 
             <div id="tab-interactive" class="tab-content">
                 <div class="features-grid">
-                    <button class="feature-btn" id="btnStartConversationSimulator"><span class="icon">🤖</span><span>Mô phỏng Hội thoại với AI <span class="pro-badge">PRO</span></span></button>
-                    <button class="feature-btn" id="btnStartSpeakingPractice"><span class="icon">🎙️</span><span>Luyện phản xạ nói (AI) <span class="pro-badge">PRO</span></span></button>
-                    <button class="feature-btn" id="btnStartWritingPractice"><span class="icon">✍️</span><span>Luyện viết có Sửa lỗi (AI) <span class="pro-badge">PRO</span></span></button>
-                    <button class="feature-btn" id="btnStartSpeakingPracticeManual"><span class="icon">🗣️</span><span>Luyện phản xạ (Thủ công)</span></button>
+                    <button class="feature-btn" id="btnStartConversationSimulator"><span class="icon">🤖</span><span>Mô phỏng Hội
+                            thoại với AI <span class="pro-badge">PRO</span></span></button>
+                    <button class="feature-btn" id="btnStartSpeakingPractice"><span class="icon">🎙️</span><span>Luyện phản xạ nói
+                            (AI) <span class="pro-badge">PRO</span></span></button>
+                    <button class="feature-btn" id="btnStartWritingPractice"><span class="icon">✍️</span><span>Luyện viết có Sửa lỗi
+                            (AI) <span class="pro-badge">PRO</span></span></button>
+                    <button class="feature-btn" id="btnStartSpeakingPracticeManual"><span class="icon">🗣️</span><span>Luyện phản xạ
+                            (Thủ công)</span></button>
+                    <button class="feature-btn" id="btnStartWritingPracticeManual"><span class="icon">✍️</span><span>Luyện viết (Thủ
+                            công)</span></button>
                 </div>
             </div>
 
@@ -547,6 +553,43 @@
         </div>
     </div>
 
+    <div id="writingPracticeManualModal" class="modal">
+        <div class="modal-content">
+            <span id="closeWritingPracticeManualModal" class="close-button">&times;</span>
+            <h2 class="text-xl font-bold mb-4 text-indigo-600">Luyện dịch (Thủ công)</h2>
+            <div class="info-card mb-4">
+                <p class="mb-2 font-semibold">Nhập các cặp từ/câu, mỗi cặp một dòng. Dùng dấu <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded-md">=</code> để ngăn cách:</p>
+                <textarea id="manualWritingInput" class="textarea-input" rows="8" placeholder="Ví dụ:&#10;sữa = milk&#10;Hôm nay trời đẹp. = Today is a beautiful day.&#10;Bạn có khỏe không? = How are you?"></textarea>
+                
+                <div class="mt-4">
+                    <p class="font-semibold mb-2">Chế độ luyện tập:</p>
+                    <div class="flex flex-wrap gap-x-6 gap-y-2">
+                        <div class="flex items-center">
+                            <input type="radio" id="modeViToEn" name="practiceMode" value="vi-en" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                            <label for="modeViToEn" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">Dịch từ Anh sang Việt</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="modeEnToVi" name="practiceMode" value="en-vi" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                            <label for="modeEnToVi" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">Dịch từ Việt sang Anh</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="modeRandom" name="practiceMode" value="random" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                            <label for="modeRandom" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">Ngẫu nhiên 2 chiều</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex items-center">
+                    <input type="checkbox" id="randomWritingCheckbox" class="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="randomWritingCheckbox" class="text-gray-700 dark:text-gray-300">Xuất hiện ngẫu nhiên trong danh sách?</label>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button id="startManualWritingBtn" class="primary-btn">Bắt đầu Luyện tập</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // --- Theme Toggle Logic ---
@@ -598,7 +641,8 @@
         let isSpeakingFullDialogue = false;
         let recognition; // Global variable for SpeechRecognition instance
         let isRecording = false; // To track recording state
-
+        var currentGlobalKeyListener = null; // BIẾN MỚI
+        
         // --- DOM Element References ---
         const vocabularyInput = document.getElementById('vocabularyInput');
         const messageBox = document.getElementById('messageBox');
@@ -617,8 +661,15 @@
             if (recognition && recognition.abort) {
                 recognition.abort();
             }
-            currentUtteranceQueue = []; 
+            currentUtteranceQueue = [];
             isSpeakingFullDialogue = false;
+
+            // Dọn dẹp trình lắng nghe sự kiện Enter toàn cục
+            if (currentGlobalKeyListener) {
+                document.removeEventListener('keydown', currentGlobalKeyListener);
+                currentGlobalKeyListener = null;
+            }
+
             // Stop recording if active when hiding sections
             if (isRecording) {
                 if (recognition) recognition.stop();
@@ -768,7 +819,7 @@
             }
 
             try {
-                if (['conversationSimulator', 'speakingPractice', 'speakingPracticeManual', 'writingPractice'].includes(featureKey)) {
+                if (['conversationSimulator', 'speakingPractice', 'speakingPracticeManual', 'writingPractice', 'writingPracticeManual'].includes(featureKey)) {
                      await renderer(featureInput, content, headerText);
                 } else {
                     const { prompt, schema } = promptGenerator(featureInput);
@@ -1273,6 +1324,10 @@
                  const data = await callGemini(prompt, schema);
                  renderWritingPracticeUI(el, data, topic);
             },
+            writingPracticeManual: (data, el) => {
+                // data now contains { pairs, direction }
+                renderWritingPracticeUIManual(el, data.pairs, data.direction);
+            },
         };
         
         // New helper function to highlight differences
@@ -1508,6 +1563,129 @@
             promptDisplay.textContent = initialData.vietnamese_sentence;
         }
 
+        function renderWritingPracticeUIManual(el, pairs, initialDirection) {
+            let currentIndex = 0;
+            let currentDirection = initialDirection;
+            let isAnswerChecked = false; // Biến trạng thái để theo dõi
+
+            el.innerHTML = `
+                <h2 class="section-header">✍️ Luyện dịch (Thủ công)</h2>
+                <div class="info-card">
+                    <h3 id="prompt-title" class="card-title"></h3>
+                    <p id="translation-prompt" class="text-2xl font-semibold text-center py-4"></p>
+                </div>
+                <textarea id="translation-input" class="textarea-input" placeholder="Nhập bản dịch của bạn ở đây..."></textarea>
+                <div id="translation-feedback" class="mt-4"></div>
+                <div class="flex justify-center gap-4 mt-4 practice-actions">
+                     <button id="check-translation-btn" class="primary-btn">✔️ Kiểm tra</button>
+                     <button id="show-answer-btn" class="feature-btn">💡 Xem đáp án</button>
+                     <button id="next-item-btn" class="feature-btn">🔄 Câu khác</button>
+                </div>
+            `;
+            
+            const promptTitle = document.getElementById('prompt-title');
+            const promptDisplay = document.getElementById('translation-prompt');
+            const inputArea = document.getElementById('translation-input');
+            const feedbackContainer = document.getElementById('translation-feedback');
+            const checkBtn = document.getElementById('check-translation-btn');
+            const showAnswerBtn = document.getElementById('show-answer-btn');
+            const nextBtn = document.getElementById('next-item-btn');
+
+            // --- Các hàm xử lý logic cốt lõi ---
+            const displayItem = () => {
+                feedbackContainer.innerHTML = '';
+                inputArea.value = '';
+                inputArea.disabled = false;
+                checkBtn.disabled = false;
+                showAnswerBtn.disabled = false;
+                isAnswerChecked = false; // Reset trạng thái khi có câu hỏi mới
+
+                const currentPair = pairs[currentIndex];
+                let promptText, answerText;
+
+                if (initialDirection === 'random') {
+                    currentDirection = Math.random() < 0.5 ? 'vi-en' : 'en-vi';
+                }
+
+                if (currentDirection === 'vi-en') {
+                    promptTitle.textContent = 'Dịch câu sau sang Tiếng Anh:';
+                    promptText = currentPair.vi;
+                    answerText = currentPair.en;
+                } else {
+                    promptTitle.textContent = 'Dịch câu sau sang Tiếng Việt:';
+                    promptText = currentPair.en;
+                    answerText = currentPair.vi;
+                }
+                
+                promptDisplay.textContent = promptText;
+                inputArea.dataset.answer = answerText;
+                inputArea.focus();
+            };
+
+            const checkAnswer = () => {
+                const userAnswer = inputArea.value.trim();
+                if (!userAnswer && !isAnswerChecked) return;
+
+                const correctAnswer = inputArea.dataset.answer;
+                let feedbackHTML;
+                if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                    feedbackHTML = `<div class="info-card border-green-500 bg-green-50 dark:bg-green-900/50"><h3 class="card-title text-green-700 dark:text-green-300">🎉 Chính xác!</h3></div>`;
+                } else {
+                    feedbackHTML = `<div class="info-card border-red-500 bg-red-50 dark:bg-red-900/50"><h3 class="card-title text-red-700 dark:text-red-300">⚠️ Chưa đúng!</h3><p><strong>Câu trả lời của bạn:</strong> ${userAnswer}</p><p class="mt-2"><strong>Đáp án đúng là:</strong> <span class="font-semibold text-green-600">${correctAnswer}</span></p></div>`;
+                }
+                
+                feedbackContainer.innerHTML = feedbackHTML;
+                inputArea.disabled = true;
+                checkBtn.disabled = true;
+                showAnswerBtn.disabled = true;
+                isAnswerChecked = true;
+            };
+            
+            const showAnswer = () => {
+                const correctAnswer = inputArea.dataset.answer;
+                feedbackContainer.innerHTML = `<div class="info-card border-blue-500 bg-blue-50 dark:bg-blue-900/50"><h3 class="card-title text-blue-700 dark:text-blue-300">Đáp án đúng</h3><p class="font-semibold text-lg">${correctAnswer}</p></div>`;
+                inputArea.disabled = true;
+                checkBtn.disabled = true;
+                showAnswerBtn.disabled = true;
+                isAnswerChecked = true;
+            };
+
+            const showNextItem = () => {
+                currentIndex = (currentIndex + 1) % pairs.length;
+                displayItem();
+            };
+
+            // --- Logic xử lý Enter mới ---
+            
+            // Xóa trình lắng nghe cũ (nếu có) trước khi thêm cái mới
+            if (currentGlobalKeyListener) {
+                document.removeEventListener('keydown', currentGlobalKeyListener);
+            }
+
+            const handleGlobalEnterPress = (e) => {
+                if (el.offsetParent === null) return; // Chỉ hoạt động khi component đang hiển thị
+
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (isAnswerChecked) {
+                        showNextItem();
+                    } else {
+                        checkAnswer();
+                    }
+                }
+            };
+            
+            // Lưu và gắn trình lắng nghe vào document
+            currentGlobalKeyListener = handleGlobalEnterPress;
+            document.addEventListener('keydown', currentGlobalKeyListener);
+
+            checkBtn.addEventListener('click', checkAnswer);
+            showAnswerBtn.addEventListener('click', showAnswer);
+            nextBtn.addEventListener('click', showNextItem);
+            
+            displayItem();
+        }
+
         // --- PROMPTS ---
         const prompts = {
             spellCheck: (input) => ({
@@ -1542,7 +1720,7 @@
             idiom: (input) => ({ prompt: `Giải thích thành ngữ tiếng Anh '${input}'. Cung cấp bản dịch đen (nếu có, bằng tiếng Việt), ý nghĩa thực sự (bằng tiếng Việt), nguồn gốc hoặc câu chuyện đằng sau nó (bằng tiếng Việt), và 3 câu ví dụ (tiếng Anh kèm bản dịch tiếng Việt). Trả về JSON với các khóa: 'idiom', 'literal_translation', 'meaning', 'origin', 'examples' (mảng đối tượng có 'english' và 'vietnamese').`, schema: { type: "OBJECT", properties: { idiom: { type: "STRING" }, literal_translation: { type: "STRING" }, meaning: { type: "STRING" }, origin: { type: "STRING" }, examples: { type: "ARRAY", items: { type: "OBJECT", properties: { english: { type: "STRING" }, vietnamese: { type: "STRING" } }, required: ["english", "vietnamese"] } } }, required: ["idiom", "meaning", "origin", "examples"] } }),
             // NEW PROMPT FOR VSTEP EMAILS
             vstepEmails: (input) => ({ 
-                prompt: `Bạn là một chuyên gia luyện thi VSTEP. Dựa vào yêu cầu viết thư sau đây: "${input}", hãy viết 3 email trả lời hoàn chỉnh. Các email phải tuân thủ quy tắc và cấu trúc của bài thi viết VSTEP (khoảng 140 từ hoặc hơn để có điểm cao hơn 1 chút, có mở bài, thân bài, kết bài, trả lời đủ các câu hỏi trong đề). Ba email phải ở 3 cấp độ khác nhau: B1, B2, C1. Quan trọng nhất: nội dung, ý tưởng, và cách phát triển ý của mỗi email phải khác nhau, không chỉ đơn thuần thay đổi từ vựng. Hãy thể hiện 3 cách tiếp cận vấn đề khác nhau. Trả về một đối tượng JSON với khóa 'emails' là một mảng các đối tượng, mỗi đối tượng có khóa 'level' (string: 'B1', 'B2', hoặc 'C1') và 'body' (string: toàn bộ nội dung email).`, 
+                prompt: `Bạn là một chuyên gia luyện thi VSTEP. Dựa vào yêu cầu viết thư sau đây: "${input}", hãy viết 3 email trả lời hoàn chỉnh. Các email phải tuân thủ quy tắc và cấu trúc của bài thi viết VSTEP (khoảng 120 từ hoặc hơn để có điểm cao hơn 1 chút, có mở bài, thân bài, kết bài, trả lời đủ các câu hỏi trong đề). Ba email phải ở 3 cấp độ khác nhau: B1, B2, C1. Quan trọng nhất: nội dung, ý tưởng, và cách phát triển ý của mỗi email phải khác nhau, không chỉ đơn thuần thay đổi từ vựng. Hãy thể hiện 3 cách tiếp cận vấn đề khác nhau. Trả về một đối tượng JSON với khóa 'emails' là một mảng các đối tượng, mỗi đối tượng có khóa 'level' (string: 'B1', 'B2', hoặc 'C1') và 'body' (string: toàn bộ nội dung email).`, 
                 schema: { type: "OBJECT", properties: { emails: { type: "ARRAY", items: { type: "OBJECT", properties: { level: { type: "STRING" }, body: { type: "STRING" } }, required: ["level", "body"] } } }, required: ["emails"] } 
             }),
             translateVnToEn: (input) => ({ prompt: `Dịch câu tiếng Việt sau đây sang tiếng Anh: "${input}". Cung cấp 5-7 phương án dịch khác nhau, sắp xếp theo mức độ phổ biến từ cao đến thấp. Với mỗi phương án, hãy cung cấp: 1. Bản dịch tiếng Anh. 2. Trạng thái phổ biến BẰNG TIẾNG VIỆT (ví dụ: "Rất phổ biến", "Tự nhiên", "Hơi trang trọng", "Ít dùng"). 3. Một ghi chú ngắn về ngữ cảnh sử dụng BẰNG TIẾNG VIỆT. Trả về một mảng JSON các đối tượng có khóa: "english_translation", "popularity_status" (bằng tiếng Việt), "usage_note" (bằng tiếng Việt).`, schema: { type: "ARRAY", items: { type: "OBJECT", properties: { english_translation: { type: "STRING" }, popularity_status: { type: "STRING" }, usage_note: { type: "STRING" } }, required: ["english_translation", "popularity_status", "usage_note"] } } }),
@@ -2121,6 +2299,67 @@
             }
         }
 
+        function startWritingPracticeManual() {
+            const modal = document.getElementById('writingPracticeManualModal');
+            modal.style.display = 'flex';
+
+            document.getElementById('startManualWritingBtn').onclick = () => {
+                const itemsText = document.getElementById('manualWritingInput').value.trim();
+                const isRandomOrder = document.getElementById('randomWritingCheckbox').checked;
+                const practiceDirection = document.querySelector('input[name="practiceMode"]:checked').value;
+
+                if (!itemsText) {
+                    showMessage('Vui lòng nhập ít nhất một cặp từ/câu để luyện tập.', 'error');
+                    return;
+                }
+
+                const lines = itemsText.split('\n').filter(line => line.includes('='));
+                if (lines.length === 0) {
+                    showMessage('Định dạng không hợp lệ. Vui lòng dùng dấu "=" để ngăn cách Tiếng Việt và Tiếng Anh.', 'error');
+                    return;
+                }
+
+                let practicePairs = lines.map(line => {
+                    const parts = line.split('=').map(part => part.trim());
+                    // Heuristic to guess which is which, assuming Vietnamese might contain non-ASCII
+                    const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(parts[0]);
+                    if (hasVietnamese) {
+                        return { vi: parts[0], en: parts[1] };
+                    }
+                    // If both or neither seem to be vietnamese, we assume vi = en format
+                    return { vi: parts[0], en: parts[1] };
+                }).filter(p => p.vi && p.en);
+                
+                if (practicePairs.length === 0) {
+                    showMessage('Không tìm thấy cặp từ/câu hợp lệ nào. Hãy kiểm tra lại định dạng.', 'error');
+                    return;
+                }
+
+                if (isRandomOrder) {
+                    for (let i = practicePairs.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [practicePairs[i], practicePairs[j]] = [practicePairs[j], practicePairs[i]];
+                    }
+                }
+
+                modal.style.display = 'none';
+                handleFeature('writingPracticeManual', 'Luyện dịch thủ công', null,
+                    (input, content, headerText) => renderers.writingPracticeManual({ pairs: practicePairs, direction: practiceDirection }, content, headerText),
+                    (input) => true,
+                    { pairs: practicePairs, direction: practiceDirection }
+                );
+            };
+
+            document.getElementById('closeWritingPracticeManualModal').onclick = () => {
+                modal.style.display = 'none';
+            };
+            modal.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
         // --- Event Listeners ---
         function attachEventListeners() {
             document.getElementById('btnClearInput').addEventListener('click', clearInput);
@@ -2154,6 +2393,7 @@
             document.getElementById('btnOxfordDictionary').addEventListener('click', () => openLink('oxfordDictionary'));
             document.getElementById('btnYouglish').addEventListener('click', () => openLink('youglish'));
             document.getElementById('btnGoogleImages').addEventListener('click', () => openLink('googleImages'));
+            document.getElementById('btnStartWritingPracticeManual').addEventListener('click', startWritingPracticeManual);
 
             closeCorrectionModalBtn.addEventListener('click', () => { correctionModal.style.display = 'none'; });
             window.addEventListener('click', (event) => { if (event.target == correctionModal) { correctionModal.style.display = 'none'; } });
