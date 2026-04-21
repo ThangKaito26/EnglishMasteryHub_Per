@@ -1568,7 +1568,7 @@
             let currentDirection = initialDirection;
             let isAnswerChecked = false; // Biến trạng thái để theo dõi
             let emptyEnterCount = 0; // Biến đếm số lần nhấn Enter khi ô nhập trống
-            let lastShiftPressTime = 0; // Biến theo dõi thời gian nhấn phím Shift
+            let lastCtrlPressTime = 0; // Biến theo dõi thời gian nhấn phím Ctrl
 
             el.innerHTML = `
                 <h2 class="section-header">✍️ Luyện dịch (Thủ công)</h2>
@@ -1602,7 +1602,7 @@
                 showAnswerBtn.disabled = false;
                 isAnswerChecked = false; // Reset trạng thái khi có câu hỏi mới
                 emptyEnterCount = 0; // Reset biến đếm Enter
-                lastShiftPressTime = 0; // Reset biến đếm Shift
+                lastCtrlPressTime = 0; // Reset biến đếm Ctrl
 
                 const currentPair = pairs[currentIndex];
                 let promptText, answerText;
@@ -1669,18 +1669,18 @@
             const handleGlobalKeyPress = (e) => {
                 if (el.offsetParent === null) return; // Chỉ hoạt động khi component đang hiển thị
 
-                // Xử lý Double Shift để xem đáp án
-                // e.repeat = false để tránh trường hợp người dùng nhấn giữ phím Shift
-                if (e.key === 'Shift' && !e.repeat) {
+                // Xử lý Double Ctrl để xem đáp án
+                // e.repeat = false để tránh trường hợp người dùng nhấn giữ phím Ctrl
+                if (e.key === 'Control' && !e.repeat) {
                     const currentTime = new Date().getTime();
-                    // Nếu khoảng cách giữa 2 lần nhấn Shift nhỏ hơn 300ms (0.3 giây)
-                    if (currentTime - lastShiftPressTime < 300) {
+                    // Nếu khoảng cách giữa 2 lần nhấn Ctrl nhỏ hơn 300ms (0.3 giây)
+                    if (currentTime - lastCtrlPressTime < 300) {
                         if (!isAnswerChecked) {
                             showAnswer();
                         }
-                        lastShiftPressTime = 0; // Reset sau khi kích hoạt thành công
+                        lastCtrlPressTime = 0; // Reset sau khi kích hoạt thành công
                     } else {
-                        lastShiftPressTime = currentTime; // Cập nhật thời gian nhấn lần 1
+                        lastCtrlPressTime = currentTime; // Cập nhật thời gian nhấn lần 1
                     }
                     return; // Thoát ra, không xử lý các logic phím khác
                 }
@@ -1706,8 +1706,8 @@
                             checkAnswer();
                         }
                     }
-                } else if (e.key !== 'Shift') {
-                    // Reset biến đếm Enter nếu người dùng bắt đầu gõ phím khác (không tính Shift)
+                } else if (e.key !== 'Control' && e.key !== 'Shift') {
+                    // Reset biến đếm Enter nếu người dùng bắt đầu gõ phím khác (không tính Ctrl và Shift)
                     emptyEnterCount = 0;
                     if (feedbackContainer.innerHTML.includes('bỏ qua câu này')) {
                         feedbackContainer.innerHTML = '';
