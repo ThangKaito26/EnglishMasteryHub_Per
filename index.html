@@ -1567,6 +1567,7 @@
             let currentIndex = 0;
             let currentDirection = initialDirection;
             let isAnswerChecked = false; // Biến trạng thái để theo dõi
+            let emptyEnterCount = 0; // Biến đếm số lần nhấn Enter khi ô nhập trống
 
             el.innerHTML = `
                 <h2 class="section-header">✍️ Luyện dịch (Thủ công)</h2>
@@ -1599,6 +1600,7 @@
                 checkBtn.disabled = false;
                 showAnswerBtn.disabled = false;
                 isAnswerChecked = false; // Reset trạng thái khi có câu hỏi mới
+                emptyEnterCount = 0; // Reset biến đếm Enter
 
                 const currentPair = pairs[currentIndex];
                 let promptText, answerText;
@@ -1667,10 +1669,29 @@
 
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
+                    
+                    const userAnswer = inputArea.value.trim();
+
                     if (isAnswerChecked) {
                         showNextItem();
                     } else {
-                        checkAnswer();
+                        if (!userAnswer) {
+                            // Tăng biến đếm nếu nhấn Enter khi ô nhập trống
+                            emptyEnterCount++;
+                            if (emptyEnterCount === 1) {
+                                feedbackContainer.innerHTML = `<div class="info-card border-yellow-500 bg-yellow-50 dark:bg-yellow-900/50"><p class="text-yellow-700 dark:text-yellow-300 text-center font-medium">⚠️ Nhấn <strong>Enter</strong> lần nữa để bỏ qua câu này.</p></div>`;
+                            } else if (emptyEnterCount >= 2) {
+                                showNextItem();
+                            }
+                        } else {
+                            checkAnswer();
+                        }
+                    }
+                } else if (e.key !== 'Shift') {
+                    // Reset biến đếm nếu người dùng bắt đầu gõ phím khác
+                    emptyEnterCount = 0;
+                    if (feedbackContainer.innerHTML.includes('bỏ qua câu này')) {
+                        feedbackContainer.innerHTML = '';
                     }
                 }
             };
