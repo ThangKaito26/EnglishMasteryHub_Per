@@ -2313,21 +2313,23 @@
                     return;
                 }
 
-                const lines = itemsText.split('\n').filter(line => line.includes('='));
+                const lines = itemsText.split('\n').filter(line => line.includes('=') || line.includes('#'));
+
                 if (lines.length === 0) {
-                    showMessage('Định dạng không hợp lệ. Vui lòng dùng dấu "=" để ngăn cách Tiếng Việt và Tiếng Anh.', 'error');
+                    showMessage("Định dạng không hợp lệ. Vui lòng dùng dấu '=' hoặc '#' để ngăn cách Tiếng Việt và Tiếng Anh.", 'error');
                     return;
                 }
-
+                
                 let practicePairs = lines.map(line => {
-                    const parts = line.split('=').map(part => part.trim());
-                    // Heuristic to guess which is which, assuming Vietnamese might contain non-ASCII
+                    // Tách bằng cả dấu = và #
+                    const parts = line.split(/[=#]/).map(part => part.trim());
+                    
                     const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(parts[0]);
+                
                     if (hasVietnamese) {
                         return { vi: parts[0], en: parts[1] };
                     }
-                    // If both or neither seem to be vietnamese, we assume vi = en format
-                    return { vi: parts[0], en: parts[1] };
+                    return { vi: parts[1], en: parts[0] };
                 }).filter(p => p.vi && p.en);
                 
                 if (practicePairs.length === 0) {
