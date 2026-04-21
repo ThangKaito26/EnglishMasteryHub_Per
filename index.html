@@ -1631,8 +1631,20 @@
                 if (!userAnswer && !isAnswerChecked) return;
 
                 const correctAnswer = inputArea.dataset.answer;
+                
+                // Hàm chuẩn hóa chuỗi để so sánh thông minh hơn
+                const normalizeText = (text) => {
+                    return text
+                        .replace(/\(.*?\)/g, '')       // Xóa phần chú thích trong ngoặc tròn (ví dụ: pinyin)
+                        .replace(/\（.*?\）/g, '')       // Xóa ngoặc tròn dạng full-width
+                        .replace(/\[.*?\]/g, '')       // Xóa phần chú thích trong ngoặc vuông
+                        .replace(/[.,?!;:'"“”…‘’。，、？！；：]/g, '') // Xóa các dấu câu phổ biến
+                        .replace(/\s+/g, '')           // Xóa mọi khoảng trắng để so sánh sát nhất
+                        .toLowerCase();                // Chuyển về chữ thường
+                };
+
                 let feedbackHTML;
-                if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                if (normalizeText(userAnswer) === normalizeText(correctAnswer)) {
                     feedbackHTML = `<div class="info-card border-green-500 bg-green-50 dark:bg-green-900/50"><h3 class="card-title text-green-700 dark:text-green-300">🎉 Chính xác!</h3></div>`;
                 } else {
                     feedbackHTML = `<div class="info-card border-red-500 bg-red-50 dark:bg-red-900/50"><h3 class="card-title text-red-700 dark:text-red-300">⚠️ Chưa đúng!</h3><p><strong>Câu trả lời của bạn:</strong> ${userAnswer}</p><p class="mt-2"><strong>Đáp án đúng là:</strong> <span class="font-semibold text-green-600">${correctAnswer}</span></p></div>`;
@@ -1670,19 +1682,17 @@
                 if (el.offsetParent === null) return; // Chỉ hoạt động khi component đang hiển thị
 
                 // Xử lý Double Ctrl để xem đáp án
-                // e.repeat = false để tránh trường hợp người dùng nhấn giữ phím Ctrl
                 if (e.key === 'Control' && !e.repeat) {
                     const currentTime = new Date().getTime();
-                    // Nếu khoảng cách giữa 2 lần nhấn Ctrl nhỏ hơn 300ms (0.3 giây)
                     if (currentTime - lastCtrlPressTime < 300) {
                         if (!isAnswerChecked) {
                             showAnswer();
                         }
-                        lastCtrlPressTime = 0; // Reset sau khi kích hoạt thành công
+                        lastCtrlPressTime = 0; 
                     } else {
-                        lastCtrlPressTime = currentTime; // Cập nhật thời gian nhấn lần 1
+                        lastCtrlPressTime = currentTime; 
                     }
-                    return; // Thoát ra, không xử lý các logic phím khác
+                    return; 
                 }
 
                 // Xử lý Enter (bao gồm double Enter để bỏ qua)
@@ -1695,7 +1705,6 @@
                         showNextItem();
                     } else {
                         if (!userAnswer) {
-                            // Tăng biến đếm nếu nhấn Enter khi ô nhập trống
                             emptyEnterCount++;
                             if (emptyEnterCount === 1) {
                                 feedbackContainer.innerHTML = `<div class="info-card border-yellow-500 bg-yellow-50 dark:bg-yellow-900/50"><p class="text-yellow-700 dark:text-yellow-300 text-center font-medium">⚠️ Nhấn <strong>Enter</strong> lần nữa để bỏ qua câu này.</p></div>`;
@@ -1707,7 +1716,6 @@
                         }
                     }
                 } else if (e.key !== 'Control' && e.key !== 'Shift') {
-                    // Reset biến đếm Enter nếu người dùng bắt đầu gõ phím khác (không tính Ctrl và Shift)
                     emptyEnterCount = 0;
                     if (feedbackContainer.innerHTML.includes('bỏ qua câu này')) {
                         feedbackContainer.innerHTML = '';
