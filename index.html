@@ -2360,12 +2360,13 @@
                 };
 
                 if (normalizeText(userAnswer) === normalizeText(correctAnswer)) {
-                    // Đúng: khóa input, đánh dấu hoàn thành
-                    feedbackContainer.innerHTML = `<div class="info-card border-green-500 bg-green-50 dark:bg-green-900/50"><h3 class="card-title text-green-700 dark:text-green-300">🎉 Chính xác!</h3></div>`;
-                    inputArea.disabled = true;
-                    checkBtn.disabled = true;
-                    showAnswerBtn.disabled = true;
+                    // Đúng: hiển thị phản hồi nhưng KHÔNG khóa input, cho phép tiếp tục nhập/kiểm tra
+                    feedbackContainer.innerHTML = `<div class="info-card border-green-500 bg-green-50 dark:bg-green-900/50"><h3 class="card-title text-green-700 dark:text-green-300">🎉 Chính xác! <span style="font-size:0.75em;opacity:0.7;">(Nhấn Enter thêm 1 lần để chuyển câu)</span></h3></div>`;
+                    inputArea.disabled = false;
+                    checkBtn.disabled = false;
+                    showAnswerBtn.disabled = false;
                     isAnswerChecked = true;
+                    inputArea.focus();
                 } else {
                     // Sai: hiển thị phản hồi nhưng KHÔNG khóa input, cho phép nhập lại
                     hasWrongAttempt = true; // Danh dau nguoi dung da tra loi sai it nhat 1 lan
@@ -2482,26 +2483,44 @@
                     return;
                 }
 
-                // Xu ly Enter: lan 1 kiem tra, lan 2 skip
+                // Xu ly Enter:
+                // - Neu dap an dung (isAnswerChecked=true): lan 1 kiem tra lai (hoac hien lai Chinh xac), lan 2 lien tiep -> chuyen cau
+                // - Neu chua dung: lan 1 kiem tra, lan 2 lien tiep -> skip
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
 
-                    enterPressCount++;
-                    if (enterPressCount >= 2) {
-                        // Lan 2: luon skip sang cau khac
-                        enterPressCount = 0;
-                        feedbackContainer.innerHTML = '';
-                        showNextItem();
-                    } else {
-                        // Lan 1: kiem tra dap an (neu co noi dung) hoac hien canh bao
-                        const userAnswer = inputArea.value.trim();
-                        if (isAnswerChecked) {
-                            showNextItem();
+                    const userAnswer = inputArea.value.trim();
+
+                    if (isAnswerChecked) {
+                        // Dap an da dung: dem Enter de chuyen cau
+                        enterPressCount++;
+                        if (enterPressCount >= 2) {
+                            // Lan 2 lien tiep sau khi dung -> chuyen cau
                             enterPressCount = 0;
-                        } else if (userAnswer) {
-                            checkAnswer();
+                            showNextItem();
                         } else {
-                            feedbackContainer.innerHTML = `<div class="info-card border-yellow-500 bg-yellow-50 dark:bg-yellow-900/50"><p class="text-yellow-700 dark:text-yellow-300 text-center font-medium">Nhấn <strong>Enter</strong> lần nữa để bỏ qua câu này.</p></div>`;
+                            // Lan 1: kiem tra lai hoac nhac nhan Enter them lan nua
+                            if (userAnswer) {
+                                checkAnswer();
+                            } else {
+                                feedbackContainer.innerHTML = `<div class="info-card border-green-500 bg-green-50 dark:bg-green-900/50"><h3 class="card-title text-green-700 dark:text-green-300">🎉 Chính xác! <span style="font-size:0.75em;opacity:0.7;">(Nhấn Enter thêm 1 lần để chuyển câu)</span></h3></div>`;
+                            }
+                        }
+                    } else {
+                        // Chua co dap an dung
+                        enterPressCount++;
+                        if (enterPressCount >= 2) {
+                            // Lan 2 lien tiep khi chua tra loi -> skip
+                            enterPressCount = 0;
+                            feedbackContainer.innerHTML = '';
+                            showNextItem();
+                        } else {
+                            // Lan 1: kiem tra hoac hien canh bao
+                            if (userAnswer) {
+                                checkAnswer();
+                            } else {
+                                feedbackContainer.innerHTML = `<div class="info-card border-yellow-500 bg-yellow-50 dark:bg-yellow-900/50"><p class="text-yellow-700 dark:text-yellow-300 text-center font-medium">Nhấn <strong>Enter</strong> lần nữa để bỏ qua câu này.</p></div>`;
+                            }
                         }
                     }
                 } else if (e.key !== 'Control' && e.key !== 'Shift') {
@@ -3245,6 +3264,9 @@
 
             closeCorrectionModalBtn.addEventListener('click', () => { correctionModal.style.display = 'none'; });
             window.addEventListener('click', (event) => { if (event.target == correctionModal) { correctionModal.style.display = 'none'; } });
+
+            // Tự động mở modal Luyện dịch (Thủ công) khi trang vừa tải xong
+            startWritingPracticeManual();
         }
     </script>
 </body>
