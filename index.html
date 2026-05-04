@@ -2289,7 +2289,12 @@
                 <h2 class="section-header">✍️ Luyện dịch (Thủ công)</h2>
                 <div class="info-card">
                     <h3 id="prompt-title" class="card-title"></h3>
-                    <p id="translation-prompt" class="text-2xl font-semibold text-center py-4"></p>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:0.6rem;">
+                        <p id="translation-prompt" class="text-2xl font-semibold text-center py-4" style="margin:0;"></p>
+                        <button id="replay-prompt-btn" title="Nghe lại" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.706A7.48 7.48 0 0 1 13.026 8a7.48 7.48 0 0 1-2.198 5.304l.708.706zm-1.416-1.415A6.479 6.479 0 0 0 12.026 8a6.479 6.479 0 0 0-1.906-4.595l-.707.707A5.48 5.48 0 0 1 11.026 8a5.48 5.48 0 0 1-1.613 3.888l.707.707zm-1.414-1.415A4.484 4.484 0 0 0 10.026 8a4.484 4.484 0 0 0-1.32-3.18l-.707.707A3.488 3.488 0 0 1 9.026 8a3.488 3.488 0 0 1-1.027 2.473l.707.707zM9.5 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 1 0V4a.5.5 0 0 0-.5-.5zm-4 2a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V6a.5.5 0 0 0-.5-.5zm-2 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0V7a.5.5 0 0 0-.5-.5z"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <textarea id="translation-input" class="textarea-input" placeholder="Nhập bản dịch của bạn ở đây..."></textarea>
                 <div id="translation-feedback" class="mt-4"></div>
@@ -2307,6 +2312,55 @@
             const checkBtn = document.getElementById('check-translation-btn');
             const showAnswerBtn = document.getElementById('show-answer-btn');
             const nextBtn = document.getElementById('next-item-btn');
+            const replayBtn = document.getElementById('replay-prompt-btn');
+
+            // --- Hàm phát âm câu hỏi (bỏ phần pinyin trong ngoặc) ---
+            const speakCurrentPrompt = (text) => {
+                if (!text || !('speechSynthesis' in window)) return;
+                // Chỉ lấy phần TRƯỚC ngoặc đầu tiên (bỏ pinyin/chú thích)
+                const cleanText = text
+                    .replace(/\s*[（(][^）)]*[）)]\s*/g, '') // bỏ ngoặc tròn
+                    .replace(/\s*\[[^\]]*\]\s*/g, '')        // bỏ ngoặc vuông
+                    .trim();
+                if (!cleanText) return;
+
+                speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+
+                // Phát hiện ngôn ngữ: nếu có chữ Hán/Kanji thì dùng zh-CN, nếu có dấu tiếng Việt thì vi-VN
+                const hasChinese = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(cleanText);
+                const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/.test(cleanText);
+
+                if (hasChinese) {
+                    utterance.lang = 'zh-CN';
+                    const voices = speechSynthesis.getVoices();
+                    const zhVoice = voices.find(v => v.lang.startsWith('zh'));
+                    if (zhVoice) utterance.voice = zhVoice;
+                    utterance.rate = 0.85;
+                } else if (hasVietnamese) {
+                    utterance.lang = 'vi-VN';
+                    const voices = speechSynthesis.getVoices();
+                    const viVoice = voices.find(v => v.lang.startsWith('vi'));
+                    if (viVoice) utterance.voice = viVoice;
+                    utterance.rate = 0.9;
+                } else {
+                    // Tiếng Anh
+                    utterance.lang = 'en-US';
+                    const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+                    const enVoice = voices.find(v => v.name === 'Google US English' || v.name.includes('English (United States)'));
+                    if (enVoice) utterance.voice = enVoice;
+                    utterance.rate = 0.9;
+                }
+
+                utterance.onerror = (e) => console.error('Lỗi phát âm:', e);
+                speechSynthesis.speak(utterance);
+            };
+
+            // Nút nghe lại
+            replayBtn.addEventListener('click', () => {
+                speakCurrentPrompt(promptDisplay.textContent);
+            });
 
             // --- Các hàm xử lý logic cốt lõi ---
             const displayItem = () => {
@@ -2340,6 +2394,14 @@
                 promptDisplay.textContent = promptText;
                 inputArea.dataset.answer = answerText;
                 inputArea.focus();
+
+                // Tự động đọc câu hỏi ngay khi hiển thị (không có độ trễ)
+                // Dùng setTimeout 0 để đảm bảo voices đã sẵn sàng sau lần đầu
+                if (speechSynthesis.getVoices().length > 0) {
+                    speakCurrentPrompt(promptText);
+                } else {
+                    speechSynthesis.addEventListener('voiceschanged', () => speakCurrentPrompt(promptText), { once: true });
+                }
             };
 
             const checkAnswer = () => {
@@ -2468,6 +2530,13 @@
 
             const handleGlobalKeyPress = (e) => {
                 if (el.offsetParent === null) return; // Chỉ hoạt động khi component đang hiển thị
+
+                // Ctrl+/ -> Nghe lại câu hỏi
+                if (e.ctrlKey && (e.key === '/' || e.key === 'Divide')) {
+                    e.preventDefault();
+                    speakCurrentPrompt(promptDisplay.textContent);
+                    return;
+                }
 
                 // Xử lý Double Ctrl để xem đáp án
                 if (e.key === 'Control' && !e.repeat) {
