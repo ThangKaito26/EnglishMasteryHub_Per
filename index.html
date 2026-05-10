@@ -2497,7 +2497,10 @@
                         return html;
                     };
 
-                    feedbackContainer.innerHTML = `<div class="info-card border-red-500 bg-red-50 dark:bg-red-900/50"><h3 class="card-title text-red-700 dark:text-red-300">⚠️ Chưa đúng!</h3><p><strong>Câu trả lời của bạn:</strong> ${userAnswer}</p><p class="mt-2"><strong>Đáp án đúng là:</strong> <span class="font-semibold text-green-600">${buildHighlightedAnswer(userAnswer, correctAnswer)}</span></p></div>`;
+                    feedbackContainer.innerHTML = `<div class="info-card border-red-500 bg-red-50 dark:bg-red-900/50"><h3 class="card-title text-red-700 dark:text-red-300">⚠️ Chưa đúng!</h3><p><strong>Câu trả lời của bạn:</strong> ${userAnswer}</p><p class="mt-2" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;"><strong>Đáp án đúng là:</strong> <span class="font-semibold text-green-600">${buildHighlightedAnswer(userAnswer, correctAnswer)}</span><button class="speak-answer-btn" title="Nghe đáp án" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.706A7.48 7.48 0 0 1 13.026 8a7.48 7.48 0 0 1-2.198 5.304l.708.706zm-1.416-1.415A6.479 6.479 0 0 0 12.026 8a6.479 6.479 0 0 0-1.906-4.595l-.707.707A5.48 5.48 0 0 1 11.026 8a5.48 5.48 0 0 1-1.613 3.888l.707.707zm-1.414-1.415A4.484 4.484 0 0 0 10.026 8a4.484 4.484 0 0 0-1.32-3.18l-.707.707A3.488 3.488 0 0 1 9.026 8a3.488 3.488 0 0 1-1.027 2.473l.707.707zM9.5 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 1 0V4a.5.5 0 0 0-.5-.5zm-4 2a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V6a.5.5 0 0 0-.5-.5zm-2 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0V7a.5.5 0 0 0-.5-.5z"/></svg></button></p></div>`;
+                    // Gắn sự kiện phát âm cho nút nghe đáp án
+                    const speakBtnWrong = feedbackContainer.querySelector('.speak-answer-btn');
+                    if (speakBtnWrong) speakBtnWrong.addEventListener('click', () => speakCurrentPrompt(correctAnswer));
                     // Giữ input và nút kiểm tra hoạt động để người dùng có thể nhập lại
                     inputArea.disabled = false;
                     checkBtn.disabled = false;
@@ -2508,7 +2511,10 @@
 
             const showAnswer = () => {
                 const correctAnswer = inputArea.dataset.answer;
-                feedbackContainer.innerHTML = `<div class="info-card border-blue-500 bg-blue-50 dark:bg-blue-900/50"><h3 class="card-title text-blue-700 dark:text-blue-300">💡 Đáp án đúng</h3><p class="font-semibold text-lg">${correctAnswer}</p></div>`;
+                feedbackContainer.innerHTML = `<div class="info-card border-blue-500 bg-blue-50 dark:bg-blue-900/50"><h3 class="card-title text-blue-700 dark:text-blue-300">💡 Đáp án đúng</h3><p class="font-semibold text-lg" style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">${correctAnswer}<button class="speak-answer-btn" title="Nghe đáp án" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.706A7.48 7.48 0 0 1 13.026 8a7.48 7.48 0 0 1-2.198 5.304l.708.706zm-1.416-1.415A6.479 6.479 0 0 0 12.026 8a6.479 6.479 0 0 0-1.906-4.595l-.707.707A5.48 5.48 0 0 1 11.026 8a5.48 5.48 0 0 1-1.613 3.888l.707.707zm-1.414-1.415A4.484 4.484 0 0 0 10.026 8a4.484 4.484 0 0 0-1.32-3.18l-.707.707A3.488 3.488 0 0 1 9.026 8a3.488 3.488 0 0 1-1.027 2.473l.707.707zM9.5 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 1 0V4a.5.5 0 0 0-.5-.5zm-4 2a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V6a.5.5 0 0 0-.5-.5zm-2 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0V7a.5.5 0 0 0-.5-.5z"/></svg></button></p></div>`;
+                // Gắn sự kiện phát âm cho nút nghe đáp án
+                const speakBtnShow = feedbackContainer.querySelector('.speak-answer-btn');
+                if (speakBtnShow) speakBtnShow.addEventListener('click', () => speakCurrentPrompt(correctAnswer));
                 // Giữ input hoạt động để người dùng có thể thử nhập sau khi xem đáp án
                 inputArea.disabled = false;
                 checkBtn.disabled = false;
@@ -2532,9 +2538,19 @@
                 if (el.offsetParent === null) return; // Chỉ hoạt động khi component đang hiển thị
 
                 // Ctrl+/ -> Nghe lại câu hỏi
-                if (e.ctrlKey && (e.key === '/' || e.key === 'Divide')) {
+                if (e.ctrlKey && (e.key === '/' || e.key === 'Divide' || e.code === 'Slash')) {
                     e.preventDefault();
                     speakCurrentPrompt(promptDisplay.textContent);
+                    return;
+                }
+
+                // Ctrl+. -> Nghe âm thanh đáp án
+                if (e.ctrlKey && (e.key === '.' || e.key === 'Decimal' || e.code === 'Period')) {
+                    e.preventDefault();
+                    const correctAnswer = inputArea.dataset.answer;
+                    if (correctAnswer) {
+                        speakCurrentPrompt(correctAnswer);
+                    }
                     return;
                 }
 
@@ -2608,8 +2624,15 @@
             inputArea.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault(); // Ngan textarea them newline
-                    // Uy quyen cho global handler bang cach dispatch khong lam gi them
-                    // Global handler se xu ly logic
+                }
+                
+                // Ho tro Ctrl+. ngay tai textarea de tranh bi cac bo go tieng Viet chan event global
+                if (e.ctrlKey && (e.key === '.' || e.key === 'Decimal' || e.code === 'Period')) {
+                    e.preventDefault();
+                    const correctAnswer = inputArea.dataset.answer;
+                    if (correctAnswer) {
+                        speakCurrentPrompt(correctAnswer);
+                    }
                 }
             });
 
