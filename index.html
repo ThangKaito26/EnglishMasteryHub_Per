@@ -808,6 +808,23 @@
             }
         }
 
+        @keyframes pulse-loop {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
         .pronunciation-score-card {
             background: var(--surface);
             border: 2px solid var(--primary-light);
@@ -2284,6 +2301,95 @@
             let enterPressCount = 0; // Dem so lan nhan Enter lien tiep
             let lastCtrlPressTime = 0; // Biến theo dõi thời gian nhấn phím Ctrl
             let hasWrongAttempt = false; // Bien theo doi neu nguoi dung da tra loi sai
+            let isLoopingAudio = false; // Trạng thái nghe liên tục đáp án
+
+            // --- Hàm phát âm liên tục (loop) đáp án ---
+            const speakLoop = (text) => {
+                if (!text || !('speechSynthesis' in window)) return;
+                isLoopingAudio = true;
+                updateLoopButtons();
+
+                const doSpeak = () => {
+                    if (!isLoopingAudio) return;
+                    const cleanText = text
+                        .replace(/\s*[（(][^）)]*[）)]\s*/g, '')
+                        .replace(/\s*\[[^\]]*\]\s*/g, '')
+                        .trim();
+                    if (!cleanText) { stopLoop(); return; }
+
+                    speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+
+                    const hasChinese = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(cleanText);
+                    const hasVietnamese = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/.test(cleanText);
+
+                    if (hasChinese) {
+                        utterance.lang = 'zh-CN';
+                        const voices = speechSynthesis.getVoices();
+                        const zhVoice = voices.find(v => v.lang.startsWith('zh'));
+                        if (zhVoice) utterance.voice = zhVoice;
+                        utterance.rate = 0.85;
+                    } else if (hasVietnamese) {
+                        utterance.lang = 'vi-VN';
+                        const voices = speechSynthesis.getVoices();
+                        const viVoice = voices.find(v => v.lang.startsWith('vi'));
+                        if (viVoice) utterance.voice = viVoice;
+                        utterance.rate = 0.9;
+                    } else {
+                        utterance.lang = 'en-US';
+                        const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+                        const enVoice = voices.find(v => v.name === 'Google US English' || v.name.includes('English (United States)'));
+                        if (enVoice) utterance.voice = enVoice;
+                        utterance.rate = 0.9;
+                    }
+
+                    utterance.onend = () => {
+                        if (isLoopingAudio) {
+                            setTimeout(doSpeak, 800); // Nghỉ 0.8s rồi phát lại
+                        }
+                    };
+                    utterance.onerror = (e) => {
+                        console.error('Lỗi phát âm loop:', e);
+                        stopLoop();
+                    };
+                    speechSynthesis.speak(utterance);
+                };
+                doSpeak();
+            };
+
+            const stopLoop = () => {
+                isLoopingAudio = false;
+                speechSynthesis.cancel();
+                updateLoopButtons();
+            };
+
+            const toggleLoop = () => {
+                if (isLoopingAudio) {
+                    stopLoop();
+                } else {
+                    const correctAnswer = inputArea?.dataset?.answer;
+                    if (correctAnswer) speakLoop(correctAnswer);
+                }
+            };
+
+            // Cập nhật trạng thái tất cả các nút loop trên giao diện
+            const updateLoopButtons = () => {
+                document.querySelectorAll('.loop-answer-btn').forEach(btn => {
+                    if (isLoopingAudio) {
+                        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1"/></svg>`;
+                        btn.title = 'Dừng nghe liên tục';
+                        btn.style.borderColor = '#ef4444';
+                        btn.style.color = '#ef4444';
+                        btn.style.animation = 'pulse-loop 1.5s infinite';
+                    } else {
+                        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11 5.466V4H5a4 4 0 0 0-4 4 4 4 0 0 0 4 4h6a3 3 0 1 0 0-6H5a2 2 0 0 0 0 4h5V9H5a1 1 0 1 1 0-2h6a2 2 0 1 1 0 4H5a3 3 0 1 1 0-6h6z"/></svg>`;
+                        btn.title = 'Nghe liên tục (Ctrl+\')';
+                        btn.style.borderColor = 'var(--border)';
+                        btn.style.color = 'var(--text-secondary)';
+                        btn.style.animation = 'none';
+                    }
+                });
+            };
 
             el.innerHTML = `
                 <h2 class="section-header">✍️ Luyện dịch (Thủ công)</h2>
@@ -2373,6 +2479,11 @@
                 enterPressCount = 0; // Reset khi chuyen cau moi
                 hasWrongAttempt = false; // Reset khi chuyen cau moi
                 lastCtrlPressTime = 0; // Reset biến đếm Ctrl
+                // Dừng nghe liên tục khi chuyển câu mới
+                const wasLooping = isLoopingAudio;
+                isLoopingAudio = false;
+                updateLoopButtons();
+                if (wasLooping) speechSynthesis.cancel(); // Hủy utterance loop đang phát
 
                 const currentPair = pairs[currentIndex];
                 let promptText, answerText;
@@ -2395,13 +2506,16 @@
                 inputArea.dataset.answer = answerText;
                 inputArea.focus();
 
-                // Tự động đọc câu hỏi ngay khi hiển thị (không có độ trễ)
-                // Dùng setTimeout 0 để đảm bảo voices đã sẵn sàng sau lần đầu
-                if (speechSynthesis.getVoices().length > 0) {
-                    speakCurrentPrompt(promptText);
-                } else {
-                    speechSynthesis.addEventListener('voiceschanged', () => speakCurrentPrompt(promptText), { once: true });
-                }
+                // Tự động đọc câu hỏi ngay khi hiển thị
+                // Nếu vừa tắt loop, delay 150ms để browser xử lý xong cancel() trước khi speak() mới
+                const speakDelay = wasLooping ? 150 : 0;
+                setTimeout(() => {
+                    if (speechSynthesis.getVoices().length > 0) {
+                        speakCurrentPrompt(promptText);
+                    } else {
+                        speechSynthesis.addEventListener('voiceschanged', () => speakCurrentPrompt(promptText), { once: true });
+                    }
+                }, speakDelay);
             };
 
             const checkAnswer = () => {
@@ -2497,10 +2611,13 @@
                         return html;
                     };
 
-                    feedbackContainer.innerHTML = `<div class="info-card border-red-500 bg-red-50 dark:bg-red-900/50"><h3 class="card-title text-red-700 dark:text-red-300">⚠️ Chưa đúng!</h3><p><strong>Câu trả lời của bạn:</strong> ${userAnswer}</p><p class="mt-2" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;"><strong>Đáp án đúng là:</strong> <span class="font-semibold text-green-600">${buildHighlightedAnswer(userAnswer, correctAnswer)}</span><button class="speak-answer-btn" title="Nghe đáp án" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.706A7.48 7.48 0 0 1 13.026 8a7.48 7.48 0 0 1-2.198 5.304l.708.706zm-1.416-1.415A6.479 6.479 0 0 0 12.026 8a6.479 6.479 0 0 0-1.906-4.595l-.707.707A5.48 5.48 0 0 1 11.026 8a5.48 5.48 0 0 1-1.613 3.888l.707.707zm-1.414-1.415A4.484 4.484 0 0 0 10.026 8a4.484 4.484 0 0 0-1.32-3.18l-.707.707A3.488 3.488 0 0 1 9.026 8a3.488 3.488 0 0 1-1.027 2.473l.707.707zM9.5 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 1 0V4a.5.5 0 0 0-.5-.5zm-4 2a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V6a.5.5 0 0 0-.5-.5zm-2 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0V7a.5.5 0 0 0-.5-.5z"/></svg></button></p></div>`;
+                    feedbackContainer.innerHTML = `<div class="info-card border-red-500 bg-red-50 dark:bg-red-900/50"><h3 class="card-title text-red-700 dark:text-red-300">⚠️ Chưa đúng!</h3><p><strong>Câu trả lời của bạn:</strong> ${userAnswer}</p><p class="mt-2" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;"><strong>Đáp án đúng là:</strong> <span class="font-semibold text-green-600">${buildHighlightedAnswer(userAnswer, correctAnswer)}</span><button class="speak-answer-btn" title="Nghe đáp án" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.706A7.48 7.48 0 0 1 13.026 8a7.48 7.48 0 0 1-2.198 5.304l.708.706zm-1.416-1.415A6.479 6.479 0 0 0 12.026 8a6.479 6.479 0 0 0-1.906-4.595l-.707.707A5.48 5.48 0 0 1 11.026 8a5.48 5.48 0 0 1-1.613 3.888l.707.707zm-1.414-1.415A4.484 4.484 0 0 0 10.026 8a4.484 4.484 0 0 0-1.32-3.18l-.707.707A3.488 3.488 0 0 1 9.026 8a3.488 3.488 0 0 1-1.027 2.473l.707.707zM9.5 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 1 0V4a.5.5 0 0 0-.5-.5zm-4 2a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V6a.5.5 0 0 0-.5-.5zm-2 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0V7a.5.5 0 0 0-.5-.5z"/></svg></button><button class="loop-answer-btn" title="Nghe liên tục (Ctrl+')" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11 5.466V4H5a4 4 0 0 0-4 4 4 4 0 0 0 4 4h6a3 3 0 1 0 0-6H5a2 2 0 0 0 0 4h5V9H5a1 1 0 1 1 0-2h6a2 2 0 1 1 0 4H5a3 3 0 1 1 0-6h6z"/></svg></button></p></div>`;
                     // Gắn sự kiện phát âm cho nút nghe đáp án
                     const speakBtnWrong = feedbackContainer.querySelector('.speak-answer-btn');
                     if (speakBtnWrong) speakBtnWrong.addEventListener('click', () => speakCurrentPrompt(correctAnswer));
+                    // Gắn sự kiện nghe liên tục
+                    const loopBtnWrong = feedbackContainer.querySelector('.loop-answer-btn');
+                    if (loopBtnWrong) { loopBtnWrong.addEventListener('click', toggleLoop); updateLoopButtons(); }
                     // Giữ input và nút kiểm tra hoạt động để người dùng có thể nhập lại
                     inputArea.disabled = false;
                     checkBtn.disabled = false;
@@ -2511,10 +2628,13 @@
 
             const showAnswer = () => {
                 const correctAnswer = inputArea.dataset.answer;
-                feedbackContainer.innerHTML = `<div class="info-card border-blue-500 bg-blue-50 dark:bg-blue-900/50"><h3 class="card-title text-blue-700 dark:text-blue-300">💡 Đáp án đúng</h3><p class="font-semibold text-lg" style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">${correctAnswer}<button class="speak-answer-btn" title="Nghe đáp án" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.706A7.48 7.48 0 0 1 13.026 8a7.48 7.48 0 0 1-2.198 5.304l.708.706zm-1.416-1.415A6.479 6.479 0 0 0 12.026 8a6.479 6.479 0 0 0-1.906-4.595l-.707.707A5.48 5.48 0 0 1 11.026 8a5.48 5.48 0 0 1-1.613 3.888l.707.707zm-1.414-1.415A4.484 4.484 0 0 0 10.026 8a4.484 4.484 0 0 0-1.32-3.18l-.707.707A3.488 3.488 0 0 1 9.026 8a3.488 3.488 0 0 1-1.027 2.473l.707.707zM9.5 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 1 0V4a.5.5 0 0 0-.5-.5zm-4 2a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V6a.5.5 0 0 0-.5-.5zm-2 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0V7a.5.5 0 0 0-.5-.5z"/></svg></button></p></div>`;
+                feedbackContainer.innerHTML = `<div class="info-card border-blue-500 bg-blue-50 dark:bg-blue-900/50"><h3 class="card-title text-blue-700 dark:text-blue-300">💡 Đáp án đúng</h3><p class="font-semibold text-lg" style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">${correctAnswer}<button class="speak-answer-btn" title="Nghe đáp án" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.706A7.48 7.48 0 0 1 13.026 8a7.48 7.48 0 0 1-2.198 5.304l.708.706zm-1.416-1.415A6.479 6.479 0 0 0 12.026 8a6.479 6.479 0 0 0-1.906-4.595l-.707.707A5.48 5.48 0 0 1 11.026 8a5.48 5.48 0 0 1-1.613 3.888l.707.707zm-1.414-1.415A4.484 4.484 0 0 0 10.026 8a4.484 4.484 0 0 0-1.32-3.18l-.707.707A3.488 3.488 0 0 1 9.026 8a3.488 3.488 0 0 1-1.027 2.473l.707.707zM9.5 3.5a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 1 0V4a.5.5 0 0 0-.5-.5zm-4 2a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V6a.5.5 0 0 0-.5-.5zm-2 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0V7a.5.5 0 0 0-.5-.5z"/></svg></button><button class="loop-answer-btn" title="Nghe liên tục (Ctrl+')" style="flex-shrink:0;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s ease;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M11 5.466V4H5a4 4 0 0 0-4 4 4 4 0 0 0 4 4h6a3 3 0 1 0 0-6H5a2 2 0 0 0 0 4h5V9H5a1 1 0 1 1 0-2h6a2 2 0 1 1 0 4H5a3 3 0 1 1 0-6h6z"/></svg></button></p></div>`;
                 // Gắn sự kiện phát âm cho nút nghe đáp án
                 const speakBtnShow = feedbackContainer.querySelector('.speak-answer-btn');
                 if (speakBtnShow) speakBtnShow.addEventListener('click', () => speakCurrentPrompt(correctAnswer));
+                // Gắn sự kiện nghe liên tục
+                const loopBtnShow = feedbackContainer.querySelector('.loop-answer-btn');
+                if (loopBtnShow) { loopBtnShow.addEventListener('click', toggleLoop); updateLoopButtons(); }
                 // Giữ input hoạt động để người dùng có thể thử nhập sau khi xem đáp án
                 inputArea.disabled = false;
                 checkBtn.disabled = false;
@@ -2551,6 +2671,13 @@
                     if (correctAnswer) {
                         speakCurrentPrompt(correctAnswer);
                     }
+                    return;
+                }
+
+                // Ctrl+' -> Nghe liên tục đáp án (toggle)
+                if (e.ctrlKey && (e.key === "'" || e.key === '\'' || e.code === 'Quote')) {
+                    e.preventDefault();
+                    toggleLoop();
                     return;
                 }
 
@@ -2633,6 +2760,13 @@
                     if (correctAnswer) {
                         speakCurrentPrompt(correctAnswer);
                     }
+                }
+
+                // Ho tro Ctrl+' ngay tai textarea de toggle nghe lien tuc
+                if (e.ctrlKey && (e.key === "'" || e.key === '\'' || e.code === 'Quote')) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Ngan event bubble len global handler (tranh toggleLoop bi goi 2 lan)
+                    toggleLoop();
                 }
             });
 
